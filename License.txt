@@ -1,20 +1,8 @@
-Simple DEFLATE decompressor
-===========================
+MIT License
+-----------
 
-This project is a clear implementation of an inflater for the DEFLATE compression format,
-suitable as a reference for educational purposes. It is provided in Java, Python, C++, TypeScript, and is open source.
-
-The code can be used for study, and as a solid basis for modification and extension.
-Consequently, the codebase optimizes for readability and avoids fancy logic,
-and does not target the best speed/memory/performance.
-
-Home page with detailed description: [https://www.nayuki.io/page/simple-deflate-decompressor](https://www.nayuki.io/page/simple-deflate-decompressor)
-
-
-License
--------
-
-Copyright © 2023 Project Nayuki. (MIT License)
+Copyright © 2023 Project Nayuki.
+Copyright © 2023 This Could Be Better.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
