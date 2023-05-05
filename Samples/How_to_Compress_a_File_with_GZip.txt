@@ -1,0 +1,15 @@
+How to Compress a File with GZip
+================================
+
+1. Create a file to compress, named, for example, "Test.txt".
+
+2. Start a command prompt window.
+
+3. From within the directory containing the file to compress,
+run the command below, substituting the specified file name
+where appropriate:
+
+	gzip Test.txt
+
+4. Verify that the file to be compressed is replaced with one having
+the .gz extension.

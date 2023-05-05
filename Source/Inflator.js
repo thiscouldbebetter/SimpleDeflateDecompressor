@@ -3,29 +3,35 @@ class Inflator
 {
 	decompressBytes(fileContentsAsBytes)
 	{
-		// var fileContentsAsUint8Array = new Uint8Array(fileContentsAsBytes);
+		var fileContentsAsUint8Array = new Uint8Array(fileContentsAsBytes);
 
 		var input =
-			new BitStream(fileContentsAsBytes);
-			// new Deflate.BitInputStream(fileContentsAsBytes);
+			//new BitStream(fileContentsAsBytes);
+			new Deflate.BitInputStream(fileContentsAsUint8Array);
 
-		let magicNumberForGZIP = input.readInteger16LE();
+		let magicNumberForGZIP = input.readUint(16);
 		if (magicNumberForGZIP != 35615)
 		{
 			throw "Invalid GZIP magic number";
 		}
-		var compressionMethodCode = input.readByte();
+		var compressionMethodCode = input.readUint(8);
 		if (compressionMethodCode != 8)
 		{
 			throw "Unsupported compression method: " + (compressionMethodCode & 0xFF);
 		}
-		var flags = input.readByte(); // Reserved flags
+		var flags = input.readUint(8); // Reserved flags
 		if ((flags & 0xE0) != 0)
 		{
 			throw "Reserved flags are set";
 		}
+
 		// Modification time.
-		var mtime = input.readInteger32LE();
+		var mtimeParts =
+		[
+			input.readUint(16),
+			input.readUint(16)
+		]
+		var mtime = 0; // todo
 		if (mtime != 0)
 		{
 			console.log
@@ -38,7 +44,7 @@ class Inflator
 			console.log("Last modified: N/A");
 		}
 
-		var extraFlags = input.readByte();
+		var extraFlags = input.readUint(8);
 		// Extra flags
 		switch (extraFlags)
 		{
@@ -54,7 +60,7 @@ class Inflator
 		}
 
 		// Operating system
-		var osCode = input.readByte();
+		var osCode = input.readUint(8);
 		var os;
 		switch (osCode & 0xFF)
 		{
@@ -109,7 +115,7 @@ class Inflator
 		if ((flags & 0x04) != 0)
 		{
 			console.log("Flag: Extra");
-			var len = input.readInteger16LE();
+			var len = input.readUint(16);
 			input.readBytes(len);
 			// Skip extra data
 		}
@@ -120,7 +126,7 @@ class Inflator
 			var sb = "";
 			while (true)
 			{
-				var temp = input.readByte();
+				var temp = input.readUint(8);
 				if (input.hasMoreBits() == false)
 				{
 					throw "EOFException";
@@ -142,7 +148,7 @@ class Inflator
 		// Header CRC flag
 		if ((flags & 0x02) != 0)
 		{
-			var crc = input.readInteger16LE(2);
+			var crc = input.readUint(16);
 			console.log("Header CRC-16: %04X%n", crc);
 		}
 
@@ -152,7 +158,7 @@ class Inflator
 			var sb = "";
 			while (true)
 			{
-				var temp = input.readByte();
+				var temp = input.readUint(8);
 				if (input.hasMoreBits() == false)
 				{
 					throw "EOFException"; 

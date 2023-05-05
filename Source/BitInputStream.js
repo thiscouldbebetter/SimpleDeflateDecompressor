@@ -18,6 +18,9 @@ var Deflate;
             // which ascends from 0 to 7 as bits are read.
             return this.bitIndex % 8;
         }
+        hasMoreBits() {
+            return (this.bitIndex < this.data.length * 8);
+        }
         readBitMaybe() {
             // Reads a bit from this stream. Returns 0 or 1
             // if a bit is available, or -1 if the end of stream

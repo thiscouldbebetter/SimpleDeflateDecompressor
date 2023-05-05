@@ -28,6 +28,11 @@ export class BitInputStream
 		return this.bitIndex % 8;
 	}
 
+	public hasMoreBits(): boolean
+	{
+		return (this.bitIndex < this.data.length * 8);
+	}
+
 	public readBitMaybe(): -1|0|1
 	{
 		// Reads a bit from this stream. Returns 0 or 1

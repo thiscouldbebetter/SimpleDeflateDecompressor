@@ -7,13 +7,13 @@
 	<h3>Simple Deflate Decompressor</h3>
 
 	<p>
-		Specify data compressed by the DEFLATE algorithm as bytes
-		in hexadecimal format, then click the Decompress button
-		to decompress those bytes.
+		Specify data compressed by the DEFLATE algorithm as a .gz file,
+		click the Decompress button to decompress those bytes,
+		then click the Save button to save the decompressed bytes.
 	</p>
 
 	<div>
-		<label>Upload a Compressed File:</label>
+		<label>Upload a Compressed .GZ File:</label>
 		<input type="file" onchange="inputFile_Changed(this);" />
 	</div>
 
@@ -21,8 +21,6 @@
 		<label>Bytes to Decompress as Hexadecimal:</label>
 		<br />
 		<textarea id="textareaBytesToDecompress" cols="40" rows="10">
-1f 8b 08 08 af 00 ae 58 04 00 54 65 73 74 2e 74 78 74 00 01 0f 00 f0 ff
-54 68 69 73 20 69 73 20 61 20 74 65 73 74 21 cc d4 7c 56 0f 00 00 00
 		</textarea>
 	</div>
 
@@ -35,17 +33,11 @@
 		</textarea>
 	</div>
 
-	<div>
-		<label>Text Decompressed:</label>
-		<br />
-		<textarea id="textareaTextDecompressed" cols="40" rows="10">
-		</textarea>
-	</div>
+	<button onclick="buttonSaveDecompressed_Clicked();">Save</button>
 
 </div>
 
 <script type="text/javascript" src="BitInputStream.js"></script>
-<script type="text/javascript" src="BitStream.js"></script>
 <script type="text/javascript" src="ByteHistory.js"></script>
 <script type="text/javascript" src="CanonicalCode.js"></script>
 <script type="text/javascript" src="Decompressor.js"></script>
@@ -72,24 +64,46 @@
 		}
 
 		var inflator = new Inflator();
-		var bytesDecompressed = inflator.decompressBytes(bytesCompressed);
+		var bytesDecompressedAsUint8Array = inflator.decompressBytes(bytesCompressed);
 
+		var bytesDecompressed = [];
+		bytesDecompressedAsUint8Array.forEach(x => bytesDecompressed.push(x) );
 		var bytesDecompressedAsHexadecimals =
-			bytesDecompressed.map(x => x.toString(16) );
+			bytesDecompressed.map(x => x.toString(16).padStart(2, "0") );
 		var bytesDecompressedAsHexadecimalString =
 			bytesDecompressedAsHexadecimals.join(" ");
 		var textareaBytesDecompressed =
 			d.getElementById("textareaBytesDecompressed");
 		textareaBytesDecompressed.value =
 			bytesDecompressedAsHexadecimalString;
+	}
 
-		var charsDecompressed =
-			bytesDecompressed.map(x => string.fromCharCode(x));
-		var textDecompressed = charsDecompressed.join("");
-		var textareaTextDecompressed =
-			d.getElementById("textareaTextDecompressed");
-		textareaTextDecompressed.value =
-			textDecompressed;
+	function buttonSaveDecompressed_Clicked()
+	{
+		var d = document;
+
+		var bytesToSaveAsHexadecimalString =
+			d.getElementById("textareaBytesDecompressed").value;
+		var bytesToSaveAsHexadecimals =
+			bytesToSaveAsHexadecimalString.split(" ");
+		var bytesToSave = bytesToSaveAsHexadecimals.map(x => parseInt(x, 16) );
+		var bytesToSaveAsBinaryChars = bytesToSave.map(x => String.fromCharCode(x) );
+		var bytesToSaveAsBinaryString = bytesToSaveAsBinaryChars.join("");
+		var bytesToSaveAsBlob = new Blob([bytesToSaveAsBinaryString], {type:"text/plain"});
+		var bytesToSaveAsUrl = window.URL.createObjectURL(bytesToSaveAsBlob);
+		var fileNameToSaveAs = "Out.bin";
+
+		var downloadLink = d.createElement("a");
+		downloadLink.download = fileNameToSaveAs;
+		downloadLink.innerHTML = "Download File";
+		downloadLink.href = bytesToSaveAsUrl;
+		downloadLink.style.display = "none";
+
+		// These may not be necessary on modern browsers.
+		//downloadLink.onclick = destroyClickedElement;
+		//document.body.appendChild(downloadLink);
+
+		downloadLink.click();
 	}
 
 	function inputFile_Changed(inputFile)
@@ -103,7 +117,7 @@
 				var bytesAsBinaryString = event.target.result;
 				var bytesAsBinaryStrings = bytesAsBinaryString.split("");
 				var bytes = bytesAsBinaryStrings.map(x => x.charCodeAt(0) );
-				var bytesAsHexadecimals = bytes.map(x => x.toString(16) );
+				var bytesAsHexadecimals = bytes.map(x => x.toString(16).padStart(2, "0") );
 				var bytesAsHexadecimalString = bytesAsHexadecimals.join(" ");
 				var d = document;
 				var textareaBytesToDecompress =
