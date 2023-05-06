@@ -1,0 +1,94 @@
+<html>
+
+<body>
+
+	<h3>Tests</h3>
+
+	<p>
+		This page runs some automated tests and displays the results.
+	</p>
+
+	<!-- TestFramework classes. -->
+	<script type="text/javascript" src="TestFramework/Source/Assert.js"></script>
+	<script type="text/javascript" src="TestFramework/Source/Test.js"></script>
+	<script type="text/javascript" src="TestFramework/Source/TestFixture.js"></script>
+	<script type="text/javascript" src="TestFramework/Source/TestSuite.js"></script>
+
+	<!-- Add script elements for the classes of the system under test below. -->
+	<script type="text/javascript" src="../Source/BitInputStream.js"></script>
+	<script type="text/javascript" src="../Source/BitStream.js"></script>
+	<script type="text/javascript" src="../Source/ByteHistory.js"></script>
+	<script type="text/javascript" src="../Source/CanonicalCode.js"></script>
+	<script type="text/javascript" src="../Source/Decompressor.js"></script>
+	<script type="text/javascript" src="../Source/Inflator.js"></script>
+	<script type="text/javascript" src="../Source/Types.js"></script>
+
+<!-- Test suite setup. -->
+<!-- Replace the demo TestFixture and Test instances with custom tests. -->
+
+<script type="text/javascript">
+
+function testDecompressRun()
+{
+	var gzipBytesAsHexadecimalString =
+		"1f 8b 08 08 c6 3a 54 64 00 03 54 65 73 74 2e 74 78 74 00 75 "
+		+ "8c c1 0a 83 30 10 44 ef 7e c5 78 ea 25 e4 57 bc e4 07 02 d9 "
+		+ "92 a5 ea d2 cd 7a c8 df 6b b4 62 b1 14 86 61 e6 1d 5e c8 5c "
+		+ "b0 25 c2 a8 58 df 85 f3 cf 62 99 f4 4e 61 99 35 dd 68 31 1e "
+		+ "c7 1f 43 25 fb 6f 91 d8 c0 f0 8a 15 b3 60 12 a5 83 39 b0 3d "
+		+ "0a 8c 27 c2 53 f4 92 6e bd cf af 5f 2f b0 97 f7 fe c3 83 47 "
+		+ "1b 51 97 24 ae cd f7 c2 4a dd 0a 64 b4 04 3f ec 00 00 00";
+	var gzipBytesAsHexadecimals = gzipBytesAsHexadecimalString.split(" ");
+	var gzipBytesCompressed = gzipBytesAsHexadecimals.map(x => parseInt(x, 16) );
+
+	var inflator = new Inflator();
+	var bytesDecompressedAsUint8Array =
+		inflator.decompressBytes(gzipBytesCompressed);
+	var bytesDecompressed = [];
+	bytesDecompressedAsUint8Array.forEach(x => bytesDecompressed.push(x) );
+	var charsDecompressed = bytesDecompressed.map(x => String.fromCharCode(x) );
+	var textDecompressed = charsDecompressed.join("");
+
+	var textDecompressedExpected =
+	[
+		"This is a test!",
+		"This is another test!",
+		"This is a third test!",
+		"This is still a test!",
+		"This is yet another test!",
+		"This is a toast!",
+		"Okay no more toast, it's time for a test!",
+		"Test test test!",
+		"Testy test test test...",
+		"Testy T. Testarudo, Tesquire",
+		""
+	].join("\n");
+
+	Assert.areStringsEqual(textDecompressedExpected, textDecompressed);
+}
+
+var suite = new TestSuite
+(
+	"TestSuite",
+	[
+		new TestFixture
+		(
+			"TestFixture0",
+			[
+				new Test
+				(
+					"Decompress",
+					testDecompressRun
+				)
+			]
+		)
+	]
+);
+
+suite.run();
+
+</script>
+
+</body>
+
+</html>
