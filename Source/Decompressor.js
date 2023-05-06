@@ -12,14 +12,14 @@ var Deflate;
         constructor(input) {
             // Constructor, which immediately performs decompression.
             this.input = input;
-            this.output = [];
+            this.output = new Array();
             this.dictionary = new Deflate.ByteHistory(32 * 1024);
             // Process the stream of blocks
-            let isFinal;
+            var isFinal;
             do {
                 // Read the block header.
                 isFinal = this.input.readUint(1) != 0; // bfinal
-                const type = this.input.readUint(2); // btype
+                var type = this.input.readUint(2); // btype
                 // Decompress rest of block based on the type
                 if (type == 0) {
                     this.decompressUncompressedBlock();
@@ -28,7 +28,7 @@ var Deflate;
                     this.decompressHuffmanBlock(Decompressor.FIXED_LITERAL_LENGTH_CODE, Decompressor.FIXED_DISTANCE_CODE);
                 }
                 else if (type == 2) {
-                    const [litLenCode, distCode] = this.decodeHuffmanCodes();
+                    var [litLenCode, distCode] = this.decodeHuffmanCodes();
                     this.decompressHuffmanBlock(litLenCode, distCode);
                 }
                 else if (type == 3) {
@@ -44,7 +44,7 @@ var Deflate;
             }
         }
         static makeFixedLiteralLengthCode() {
-            let codeLens = [];
+            var codeLens = new Array();
             for (let i = 0; i < 144; i++) {
                 codeLens.push(8);
             }
@@ -60,8 +60,8 @@ var Deflate;
             return new Deflate.CanonicalCode(codeLens);
         }
         static makeFixedDistanceCode() {
-            let codeLens = [];
-            for (let i = 0; i < 32; i++) {
+            var codeLens = new Array();
+            for (var i = 0; i < 32; i++) {
                 codeLens.push(5);
             }
             return new Deflate.CanonicalCode(codeLens);
@@ -69,30 +69,30 @@ var Deflate;
         decodeHuffmanCodes() {
             // Reads from the bit input stream, decodes the Huffman code
             // specifications into code trees, and returns the trees.
-            const numLitLenCodes = this.input.readUint(5) + 257; // hlit + 257
-            const numDistCodes = this.input.readUint(5) + 1; // hdist + 1
+            var numLitLenCodes = this.input.readUint(5) + 257; // hlit + 257
+            var numDistCodes = this.input.readUint(5) + 1; // hdist + 1
             // Read the code length code lengths.
-            const numCodeLenCodes = this.input.readUint(4) + 4; // hclen + 4
-            let codeLenCodeLen = []; // This array is filled in a strange order.
-            for (let i = 0; i < 19; i++) {
+            var numCodeLenCodes = this.input.readUint(4) + 4; // hclen + 4
+            var codeLenCodeLen = new Array(); // This array is filled in a strange order.
+            for (var i = 0; i < 19; i++) {
                 codeLenCodeLen.push(0);
             }
             codeLenCodeLen[16] = this.input.readUint(3);
             codeLenCodeLen[17] = this.input.readUint(3);
             codeLenCodeLen[18] = this.input.readUint(3);
             codeLenCodeLen[0] = this.input.readUint(3);
-            for (let i = 0; i < numCodeLenCodes - 4; i++) {
-                const j = ((i % 2 == 0)
+            for (var i = 0; i < numCodeLenCodes - 4; i++) {
+                var j = ((i % 2 == 0)
                     ? (8 + Math.floor(i / 2))
                     : (7 - Math.floor(i / 2)));
                 codeLenCodeLen[j] = this.input.readUint(3);
             }
             // Create the code length code.
-            const codeLenCode = new Deflate.CanonicalCode(codeLenCodeLen);
+            var codeLenCode = new Deflate.CanonicalCode(codeLenCodeLen);
             // Read the main code lengths and handle runs.
-            let codeLens = [];
+            var codeLens = new Array();
             while (codeLens.length < numLitLenCodes + numDistCodes) {
-                const sym = codeLenCode.decodeNextSymbol(this.input);
+                var sym = codeLenCode.decodeNextSymbol(this.input);
                 if (0 <= sym && sym <= 15) {
                     codeLens.push(sym);
                 }
@@ -100,19 +100,19 @@ var Deflate;
                     if (codeLens.length == 0) {
                         throw new Error("No code length value to copy");
                     }
-                    const runLen = this.input.readUint(2) + 3;
-                    for (let i = 0; i < runLen; i++) {
+                    var runLen = this.input.readUint(2) + 3;
+                    for (var i = 0; i < runLen; i++) {
                         codeLens.push(codeLens[codeLens.length - 1]);
                     }
                 }
                 else if (sym == 17) {
-                    const runLen = this.input.readUint(3) + 3;
+                    var runLen = this.input.readUint(3) + 3;
                     for (let i = 0; i < runLen; i++) {
                         codeLens.push(0);
                     }
                 }
                 else if (sym == 18) {
-                    const runLen = this.input.readUint(7) + 11;
+                    var runLen = this.input.readUint(7) + 11;
                     for (let i = 0; i < runLen; i++) {
                         codeLens.push(0);
                     }
@@ -125,21 +125,21 @@ var Deflate;
                 throw new Error("Run exceeds number of codes.");
             }
             // Create literal-length code tree.
-            const litLenCodeLen = codeLens.slice(0, numLitLenCodes);
+            var litLenCodeLen = codeLens.slice(0, numLitLenCodes);
             if (litLenCodeLen[256] == 0) {
                 throw new Error("End-of-block symbol has zero code length.");
             }
-            const litLenCode = new Deflate.CanonicalCode(litLenCodeLen);
+            var litLenCode = new Deflate.CanonicalCode(litLenCodeLen);
             // Create distance code tree with some extra processing.
-            let distCodeLen = codeLens.slice(numLitLenCodes);
-            let distCode;
+            var distCodeLen = codeLens.slice(numLitLenCodes);
+            var distCode;
             if (distCodeLen.length == 1 && distCodeLen[0] == 0) {
                 distCode = null; // Empty distance code; the block shall be all literal symbols.
             }
             else {
                 // Get statistics for upcoming logic.
-                const oneCount = distCodeLen.filter(x => x == 1).length;
-                const otherPositiveCount = distCodeLen.filter(x => x > 1).length;
+                var oneCount = distCodeLen.filter(x => x == 1).length;
+                var otherPositiveCount = distCodeLen.filter(x => x > 1).length;
                 // Handle the case where only one distance code is defined
                 if (oneCount == 1 && otherPositiveCount == 0) {
                     while (distCodeLen.length < 32) {
@@ -175,7 +175,7 @@ var Deflate;
             // Decompresses a Huffman-coded block from the
             // bit input stream based on the given Huffman codes.
             while (true) {
-                const sym = litLenCode.decodeNextSymbol(this.input);
+                var sym = litLenCode.decodeNextSymbol(this.input);
                 if (sym == 256) {
                     // End of block.
                     break;
@@ -187,15 +187,15 @@ var Deflate;
                 }
                 else {
                     // Length and distance for copying
-                    const run = this.decodeRunLength(sym);
+                    var run = this.decodeRunLength(sym);
                     if (!(3 <= run && run <= 258)) {
                         throw new Error("Invalid run length");
                     }
                     if (distCode === null) {
                         throw new Error("Length symbol encountered with empty distance code");
                     }
-                    const distSym = distCode.decodeNextSymbol(this.input);
-                    const dist = this.decodeDistance(distSym);
+                    var distSym = distCode.decodeNextSymbol(this.input);
+                    var dist = this.decodeDistance(distSym);
                     if (!(1 <= dist && dist <= 32768)) {
                         throw new Error("Invalid distance");
                     }
@@ -215,7 +215,7 @@ var Deflate;
                 return sym - 254;
             }
             else if (sym <= 284) {
-                const numExtraBits = Math.floor((sym - 261) / 4);
+                var numExtraBits = Math.floor((sym - 261) / 4);
                 var returnValue = ((((sym - 265) % 4 + 4)
                     << numExtraBits)
                     + 3
@@ -242,7 +242,7 @@ var Deflate;
                 return sym + 1;
             }
             else if (sym <= 29) {
-                const numExtraBits = Math.floor(sym / 2) - 1;
+                var numExtraBits = Math.floor(sym / 2) - 1;
                 var returnValue = ((sym % 2 + 2) << numExtraBits)
                     + 1
                     + this.input.readUint(numExtraBits);

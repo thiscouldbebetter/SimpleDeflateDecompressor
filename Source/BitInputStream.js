@@ -25,7 +25,7 @@ var Deflate;
             // Reads a bit from this stream. Returns 0 or 1
             // if a bit is available, or -1 if the end of stream
             // is reached. The end of stream always occurs on a byte boundary.
-            const byteIndex = (this.bitIndex >>> 3);
+            var byteIndex = (this.bitIndex >>> 3);
             if (byteIndex >= this.data.length) {
                 return -1;
             }
@@ -41,7 +41,7 @@ var Deflate;
             }
             let result = 0;
             for (let i = 0; i < numBits; i++) {
-                const bit = this.readBitMaybe();
+                var bit = this.readBitMaybe();
                 if (bit == -1) {
                     throw new Error("Unexpected end of data");
                 }

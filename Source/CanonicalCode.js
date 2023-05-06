@@ -2,20 +2,20 @@
 var Deflate;
 (function (Deflate) {
     class CanonicalCode {
-        // Constructs a canonical Huffman code from the given list of symbol code lengths.
-        // Each code length must be non-negative. Code length 0 means no code for the symbol.
-        // The collection of code lengths must represent a proper full Huffman code tree.
-        // Examples of code lengths that result in correct full Huffman code trees:
-        // - [1, 1] (result: A=0, B=1)
-        // - [2, 2, 1, 0, 0, 0] (result: A=10, B=11, C=0)
-        // - [3, 3, 3, 3, 3, 3, 3, 3] (result: A=000, B=001, C=010, ..., H=111)
-        // Examples of code lengths that result in under-full Huffman code trees:
-        // - [0, 2, 0] (result: B=00, unused=01, unused=1)
-        // - [0, 1, 0, 2] (result: B=0, D=10, unused=11)
-        // Examples of code lengths that result in over-full Huffman code trees:
-        // - [1, 1, 1] (result: A=0, B=1, C=overflow)
-        // - [1, 1, 2, 2, 3, 3, 3, 3] (result: A=0, B=1, C=overflow, ...)
         constructor(codeLengths) {
+            // Constructs a canonical Huffman code from the given list of symbol code lengths.
+            // Each code length must be non-negative. Code length 0 means no code for the symbol.
+            // The collection of code lengths must represent a proper full Huffman code tree.
+            // Examples of code lengths that result in correct full Huffman code trees:
+            // - [1, 1] (result: A=0, B=1)
+            // - [2, 2, 1, 0, 0, 0] (result: A=10, B=11, C=0)
+            // - [3, 3, 3, 3, 3, 3, 3, 3] (result: A=000, B=001, C=010, ..., H=111)
+            // Examples of code lengths that result in under-full Huffman code trees:
+            // - [0, 2, 0] (result: B=00, unused=01, unused=1)
+            // - [0, 1, 0, 2] (result: B=0, D=10, unused=11)
+            // Examples of code lengths that result in over-full Huffman code trees:
+            // - [1, 1, 1] (result: A=0, B=1, C=overflow)
+            // - [1, 1, 2, 2, 3, 3, 3, 3] (result: A=0, B=1, C=overflow, ...)
             // A canonical Huffman code, where the code values for each symbol is
             // derived from a given sequence of code lengths. This data structure is
             // immutable. This could be transformed into an explicit Huffman code tree.
@@ -52,10 +52,10 @@ var Deflate;
             //   0b1_110 -> 2
             //   0b1_111 -> 4
             this.codeBitsToSymbol = new Map();
-            let nextCode = 0;
-            for (let codeLength = 1; codeLength <= CanonicalCode.MAX_CODE_LENGTH; codeLength++) {
+            var nextCode = 0;
+            for (var codeLength = 1; codeLength <= CanonicalCode.MAX_CODE_LENGTH; codeLength++) {
                 nextCode <<= 1;
-                const startBit = 1 << codeLength;
+                var startBit = 1 << codeLength;
                 codeLengths.forEach((cl, symbol) => {
                     if (cl != codeLength) {
                         return;
@@ -75,10 +75,10 @@ var Deflate;
             // Decodes the next symbol from the given bit input stream
             // based on this canonical code. The returned symbol value
             // is in the range [0, codeLengths.size()).
-            let codeBits = 1;
+            var codeBits = 1;
             while (true) {
                 codeBits = codeBits << 1 | inp.readUint(1);
-                const result = this.codeBitsToSymbol.get(codeBits);
+                var result = this.codeBitsToSymbol.get(codeBits);
                 if (result !== undefined) {
                     return result;
                 }

@@ -10,7 +10,7 @@ export class BitInputStream
 	// as the sequence of bits [1,1,1,0,0,0,0,1].
 
 	// In the range [0, data.length*8].
-	private bitIndex: int = 0;
+	private bitIndex: number = 0;
 
 	public constructor
 	(
@@ -20,7 +20,7 @@ export class BitInputStream
 		// Constructs a bit input stream based on the given byte array.
 	}
 
-	public getBitPosition(): int
+	getBitPosition(): number
 	{
 		// Returns the current bit position,
 		// which ascends from 0 to 7 as bits are read.
@@ -28,29 +28,29 @@ export class BitInputStream
 		return this.bitIndex % 8;
 	}
 
-	public hasMoreBits(): boolean
+	hasMoreBits(): boolean
 	{
 		return (this.bitIndex < this.data.length * 8);
 	}
 
-	public readBitMaybe(): -1|0|1
+	readBitMaybe(): number
 	{
 		// Reads a bit from this stream. Returns 0 or 1
 		// if a bit is available, or -1 if the end of stream
 		// is reached. The end of stream always occurs on a byte boundary.
 
-		const byteIndex: int = (this.bitIndex >>> 3);
+		var byteIndex = (this.bitIndex >>> 3);
 		if (byteIndex >= this.data.length)
 		{
 			return -1;
 		}
 		const result =
-			((this.data[byteIndex] >>> (this.bitIndex & 7)) & 1) as (0|1);
+			((this.data[byteIndex] >>> (this.bitIndex & 7)) & 1);
 		this.bitIndex++;
 		return result;
 	}
 
-	public readUint(numBits: int): int
+	readUint(numBits: number): number
 	{
 		// Reads the given number of bits from this stream,
 		// packing them in little endian as an unsigned integer.
@@ -60,10 +60,10 @@ export class BitInputStream
 			throw new RangeError("Number of bits out of range");
 		}
 
-		let result: int = 0;
+		let result = 0;
 		for (let i = 0; i < numBits; i++)
 		{
-			const bit: -1|0|1 = this.readBitMaybe();
+			var bit = this.readBitMaybe();
 			if (bit == -1)
 			{
 				throw new Error("Unexpected end of data");

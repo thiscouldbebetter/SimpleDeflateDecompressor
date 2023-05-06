@@ -8,17 +8,16 @@ export class ByteHistory
 	// Useful as an implicit dictionary for Lempel-Ziv schemes.
 
 	// Maximum number of bytes stored in this history.
-	private size: int;
+	private size: number;
 
 	// Circular buffer of byte data.
-	private data: Array<byte> = [];
+	private data: Array<number> = [];
 	
 	// Index of next byte to write to,
 	// always in the range [0, data.length).
-	private index: int = 0;
+	private index: number = 0;
 
-	// Constructs a byte history of the given size.
-	public constructor(size: int)
+	constructor(size: number)
 	{
 		if (size < 1)
 		{
@@ -27,10 +26,11 @@ export class ByteHistory
 		this.size = size;
 	}
 
-	// Appends the given byte to this history.
-	// This overwrites the byte value at `size` positions ago.
-	public append(b: byte): void
+	append(b: number): void
 	{
+		// Appends the given byte to this history.
+		// This overwrites the byte value at `size` positions ago.
+
 		if (this.data.length < this.size)
 		{
 			this.data.push(0);  // Dummy value.
@@ -45,28 +45,29 @@ export class ByteHistory
 		this.index = (this.index + 1) % this.size;
 	}
 
-	// Copies `len` bytes starting at `dist` bytes ago to the
-	// given output array and also back into this buffer itself.
-	// Note that if the count exceeds the distance, then some of the output
-	// data will be a copy of data that was copied earlier in the process.
-	public copy
+	copy
 	(
-		dist: int,
-		len: int,
-		out: Array<byte>
+		dist: number,
+		len: number,
+		out: Array<number>
 	): void
 	{
+		// Copies `len` bytes starting at `dist` bytes ago to the
+		// given output array and also back into this buffer itself.
+		// Note that if the count exceeds the distance, then some of the output
+		// data will be a copy of data that was copied earlier in the process.
+
 		if (len < 0 || !(1 <= dist && dist <= this.data.length))
 		{
 			throw new RangeError("Invalid length or distance");
 		}
 
-		let readIndex: int =
+		let readIndex =
 			(this.index + this.size - dist) % this.size;
 
 		for (let i = 0; i < len; i++)
 		{
-			const b: byte = this.data[readIndex];
+			var b = this.data[readIndex];
 			readIndex = (readIndex + 1) % this.size;
 			out.push(b);
 			this.append(b);

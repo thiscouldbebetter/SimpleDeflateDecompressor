@@ -7,14 +7,14 @@ export class Decompressor
 	// Decompresses raw DEFLATE data (without zlib
 	// or gzip container) into bytes.
 
-	public static decompress(input: BitInputStream): Uint8Array
+	static decompress(input: BitInputStream): Uint8Array
 	{
 		// Reads from the given input stream, decompresses the data,
 		// and returns a new byte array.
 		return new Uint8Array(new Decompressor(input).output);
 	}
 
-	private output: Array<byte> = [];
+	private output = new Array<number>();
 
 	private dictionary = new ByteHistory(32 * 1024);
 
@@ -25,12 +25,12 @@ export class Decompressor
 		// Constructor, which immediately performs decompression.
 
 		// Process the stream of blocks
-		let isFinal: boolean;
+		var isFinal: boolean;
 		do
 		{
 			// Read the block header.
 			isFinal = this.input.readUint(1) != 0;  // bfinal
-			const type: int = this.input.readUint(2);  // btype
+			var type = this.input.readUint(2);  // btype
 
 			// Decompress rest of block based on the type
 			if (type == 0)
@@ -47,7 +47,7 @@ export class Decompressor
 			}
 			else if (type == 2)
 			{
-				const [litLenCode, distCode]: [CanonicalCode,CanonicalCode|null]
+				var [litLenCode, distCode]
 					= this.decodeHuffmanCodes();
 				this.decompressHuffmanBlock(litLenCode, distCode);
 			}
@@ -74,7 +74,7 @@ export class Decompressor
 
 	private static makeFixedLiteralLengthCode(): CanonicalCode
 	{
-		let codeLens: Array<int> = [];
+		var codeLens = new Array<number>();
 
 		for (let i = 0; i < 144; i++)
 		{
@@ -101,32 +101,32 @@ export class Decompressor
 
 	private static makeFixedDistanceCode(): CanonicalCode
 	{
-		let codeLens: Array<int> = [];
-		for (let i = 0; i < 32; i++)
+		var codeLens = new Array<number>();
+		for (var i = 0; i < 32; i++)
 		{
 			codeLens.push(5);
 		}
 		return new CanonicalCode(codeLens);
 	}
 
-	private decodeHuffmanCodes(): [CanonicalCode,CanonicalCode|null]
+	private decodeHuffmanCodes(): [CanonicalCode,CanonicalCode]
 	{
 		// Reads from the bit input stream, decodes the Huffman code
 		// specifications into code trees, and returns the trees.
 
-		const numLitLenCodes: int =
+		var numLitLenCodes =
 			this.input.readUint(5) + 257;  // hlit + 257
 
-		const numDistCodes: int =
+		var numDistCodes =
 			this.input.readUint(5) + 1; // hdist + 1
 
 		// Read the code length code lengths.
 
-		const numCodeLenCodes: int = this.input.readUint(4) + 4;   // hclen + 4
+		var numCodeLenCodes = this.input.readUint(4) + 4;   // hclen + 4
 
-		let codeLenCodeLen: Array<int> = [];  // This array is filled in a strange order.
+		var codeLenCodeLen = new Array<number>();  // This array is filled in a strange order.
 
-		for (let i = 0; i < 19; i++)
+		for (var i = 0; i < 19; i++)
 		{
 			codeLenCodeLen.push(0);
 		}
@@ -136,9 +136,9 @@ export class Decompressor
 		codeLenCodeLen[18] = this.input.readUint(3);
 		codeLenCodeLen[ 0] = this.input.readUint(3);
 
-		for (let i = 0; i < numCodeLenCodes - 4; i++)
+		for (var i = 0; i < numCodeLenCodes - 4; i++)
 		{
-			const j: int =
+			var j =
 			(
 				(i % 2 == 0)
 				? (8 + Math.floor(i / 2))
@@ -148,13 +148,13 @@ export class Decompressor
 		}
 
 		// Create the code length code.
-		const codeLenCode = new CanonicalCode(codeLenCodeLen);
+		var codeLenCode = new CanonicalCode(codeLenCodeLen);
 
 		// Read the main code lengths and handle runs.
-		let codeLens: Array<int> = [];
+		var codeLens = new Array<number>();
 		while (codeLens.length < numLitLenCodes + numDistCodes)
 		{
-			const sym: int =
+			var sym =
 				codeLenCode.decodeNextSymbol(this.input);
 
 			if (0 <= sym && sym <= 15)
@@ -167,15 +167,15 @@ export class Decompressor
 				{
 					throw new Error("No code length value to copy");
 				}
-				const runLen: int = this.input.readUint(2) + 3;
-				for (let i = 0; i < runLen; i++)
+				var runLen = this.input.readUint(2) + 3;
+				for (var i = 0; i < runLen; i++)
 				{
 					codeLens.push(codeLens[codeLens.length - 1]);
 				}
 			}
 			else if (sym == 17)
 			{
-				const runLen: int = this.input.readUint(3) + 3;
+				var runLen = this.input.readUint(3) + 3;
 				for (let i = 0; i < runLen; i++)
 				{
 					codeLens.push(0);
@@ -183,7 +183,7 @@ export class Decompressor
 			}
 			else if (sym == 18)
 			{
-				const runLen: int = this.input.readUint(7) + 11;
+				var runLen = this.input.readUint(7) + 11;
 				for (let i = 0; i < runLen; i++)
 				{
 					codeLens.push(0);
@@ -201,7 +201,7 @@ export class Decompressor
 		}
 
 		// Create literal-length code tree.
-		const litLenCodeLen: Array<int> =
+		var litLenCodeLen =
 			codeLens.slice(0, numLitLenCodes);
 
 		if (litLenCodeLen[256] == 0)
@@ -209,12 +209,12 @@ export class Decompressor
 			throw new Error("End-of-block symbol has zero code length.");
 		}
 
-		const litLenCode = new CanonicalCode(litLenCodeLen);
+		var litLenCode = new CanonicalCode(litLenCodeLen);
 
 		// Create distance code tree with some extra processing.
-		let distCodeLen: Array<int> = codeLens.slice(numLitLenCodes);
+		var distCodeLen = codeLens.slice(numLitLenCodes);
 
-		let distCode: CanonicalCode|null;
+		var distCode: CanonicalCode;
 
 		if (distCodeLen.length == 1 && distCodeLen[0] == 0)
 		{
@@ -223,9 +223,9 @@ export class Decompressor
 		else
 		{
 			// Get statistics for upcoming logic.
-			const oneCount: int =
+			var oneCount =
 				distCodeLen.filter(x => x == 1).length;
-			const otherPositiveCount: int =
+			var otherPositiveCount =
 				distCodeLen.filter(x => x > 1).length;
 
 			// Handle the case where only one distance code is defined
@@ -254,8 +254,8 @@ export class Decompressor
 		}
 
 		// Read length.
-		const len: int = this.input.readUint(16);
-		const nlen: int = this.input.readUint(16);
+		const len = this.input.readUint(16);
+		const nlen = this.input.readUint(16);
 
 		if ((len ^ 0xFFFF) != nlen)
 		{
@@ -265,7 +265,7 @@ export class Decompressor
 		// Copy bytes.
 		for (let i = 0; i < len; i++)
 		{
-			const b: byte = this.input.readUint(8);  // Byte is aligned.
+			const b = this.input.readUint(8);  // Byte is aligned.
 			this.output.push(b);
 			this.dictionary.append(b);
 		}
@@ -273,7 +273,7 @@ export class Decompressor
 
 	private decompressHuffmanBlock
 	(
-		litLenCode: CanonicalCode, distCode: CanonicalCode|null
+		litLenCode: CanonicalCode, distCode: CanonicalCode
 	): void
 	{
 		// Decompresses a Huffman-coded block from the
@@ -281,7 +281,7 @@ export class Decompressor
 
 		while (true)
 		{
-			const sym: int = litLenCode.decodeNextSymbol(this.input);
+			var sym = litLenCode.decodeNextSymbol(this.input);
 			if (sym == 256)  
 			{
 				// End of block.
@@ -296,7 +296,7 @@ export class Decompressor
 			else
 			{
 				// Length and distance for copying
-				const run: int = this.decodeRunLength(sym);
+				var run = this.decodeRunLength(sym);
 
 				if (!(3 <= run && run <= 258))
 				{
@@ -308,10 +308,10 @@ export class Decompressor
 					throw new Error("Length symbol encountered with empty distance code");
 				}
 
-				const distSym: int =
+				var distSym =
 					distCode.decodeNextSymbol(this.input);
 
-				const dist: int = this.decodeDistance(distSym);
+				var dist = this.decodeDistance(distSym);
 
 				if (!(1 <= dist && dist <= 32768))
 				{
@@ -323,7 +323,7 @@ export class Decompressor
 		}
 	}
 
-	private decodeRunLength(sym: int): int
+	private decodeRunLength(sym: number): number
 	{
 		// Returns the run length based on the given symbol
 		// and possibly reading more bits.
@@ -341,7 +341,7 @@ export class Decompressor
 		}
 		else if (sym <= 284)
 		{
-			const numExtraBits: int = Math.floor((sym - 261) / 4);
+			var numExtraBits = Math.floor((sym - 261) / 4);
 			var returnValue =
 			(
 				(
@@ -365,7 +365,7 @@ export class Decompressor
 	}
 
 
-	private decodeDistance(sym: int): int
+	private decodeDistance(sym: number): number
 	{
 		// Returns the distance based on the given symbol
 		// and possibly reading more bits.
@@ -383,7 +383,7 @@ export class Decompressor
 		}
 		else if (sym <= 29)
 		{
-			const numExtraBits: int = Math.floor(sym / 2) - 1;
+			var numExtraBits = Math.floor(sym / 2) - 1;
 
 			var returnValue =
 				((sym % 2 + 2) << numExtraBits)
